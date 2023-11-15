@@ -1,0 +1,12 @@
+[package]
+name = "anki-xprofile-merge"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ureq = "2.8.0"
+sqlx = { version = "0.6.2", features = ["runtime-tokio-native-tls", "sqlite"]}
+tokio = { version = "1.20.0", features = ["macros"]}
+notmecab = "0.5.1"
