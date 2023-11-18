@@ -6,13 +6,8 @@ use sqlx::prelude::FromRow;
 
 use crate::{ankidb::AnkiDatabase, mydb::MyDatabase, parser::Parser};
 const DB_URL: &str = "sqlite://sqlite.db";
+//TODO [cfg(windows) linux etc, parameter/inquire about the profile]
 const DB_URL2: &str = "sqlite:///home/bv/.local/share/Anki2/SentenceBank/collection.anki2";
-
-#[derive(Clone, FromRow, Debug)]
-struct AnkiNote {
-    id: i64,
-    flds: String,
-}
 
 #[tokio::main]
 async fn main() {
@@ -21,11 +16,6 @@ async fn main() {
     let db = MyDatabase::new(DB_URL).await;
     let db_anki = AnkiDatabase::new(DB_URL2).await;
     db.migrate().await;
-
-    // let notes_results = sqlx::query_as::<_, AnkiNote>("SELECT id, flds FROM notes")
-    //     .fetch_all(&db_anki.0)
-    //     .await
-    //     .unwrap();
 
     // let mut tx = db.0.begin().await.unwrap();
     // //TODO rayon?

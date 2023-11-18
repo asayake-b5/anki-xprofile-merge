@@ -18,6 +18,7 @@ impl MyDatabase {
     }
 
     pub async fn migrate(&self) {
+        //TODO migrate from insert_str!() ?
         let crate_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
         let migrations = std::path::Path::new(&crate_dir).join("./migrations");
         let migration_results = sqlx::migrate::Migrator::new(migrations)
