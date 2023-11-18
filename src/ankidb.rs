@@ -1,12 +1,14 @@
+use std::fmt::Display;
+
 use sqlx::{migrate::MigrateDatabase, FromRow, Sqlite, SqlitePool};
 
 pub struct AnkiDatabase(pub SqlitePool);
 
 #[derive(Clone, FromRow, Debug)]
 pub struct AnkiDeck {
-    id: i64,
-    name: String,
-    card_count: i64,
+    pub id: i64,
+    pub name: String,
+    pub card_count: i64,
 }
 
 #[derive(Clone, FromRow, Debug)]

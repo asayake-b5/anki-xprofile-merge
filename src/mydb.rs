@@ -3,9 +3,9 @@ use sqlx::{migrate::MigrateDatabase, FromRow, Sqlite, SqlitePool};
 pub struct MyDatabase(pub SqlitePool);
 
 #[derive(Clone, FromRow, Debug)]
-pub struct MyDecks {
-    id: i64,
-    timestamp: i64,
+pub struct MyDeck {
+    pub id: i64,
+    pub timestamp: i64,
 }
 
 impl MyDatabase {
@@ -37,8 +37,8 @@ impl MyDatabase {
         tx.commit().await.unwrap();
     }
 
-    pub async fn ids(&self) -> Vec<MyDecks> {
-        sqlx::query_as::<_, MyDecks>(
+    pub async fn ids(&self) -> Vec<MyDeck> {
+        sqlx::query_as::<_, MyDeck>(
             "SELECT id, CAST(strftime(\"%s\", timestamp) as INTEGER) as timestamp from decks",
         )
         .fetch_all(&self.0)
