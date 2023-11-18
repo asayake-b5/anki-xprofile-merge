@@ -13,7 +13,7 @@ const DB_URL2: &str = "sqlite:///home/bv/.local/share/Anki2/SentenceBank/collect
 async fn main() {
     let mut parser = Parser::new();
 
-    let db = MyDatabase::new(DB_URL).await;
+    let mut db = MyDatabase::new(DB_URL).await;
     let db_anki = AnkiDatabase::new(DB_URL2).await;
     db.migrate().await;
 

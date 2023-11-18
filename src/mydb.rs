@@ -17,6 +17,20 @@ impl MyDatabase {
         Self(db)
     }
 
+    pub async fn add_ids(&mut self, deck_ids: &[i64]) {
+        let mut tx = self.0.begin().await.unwrap();
+        for id in deck_ids {
+            sqlx::query(
+                "INSERT INTO decks (id) VALUES (?) ON CONFLICT(id) DO UPDATE SET timestamp = CURRENT_TIMESTAMP"
+            )
+            .bind(id)
+            .execute(&mut tx)
+            .await
+            .unwrap();
+        }
+        tx.commit().await.unwrap();
+    }
+
     pub async fn migrate(&self) {
         //TODO migrate from insert_str!() ?
         let crate_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
