@@ -16,6 +16,7 @@ async fn main() {
     let mut db = MyDatabase::new(DB_URL).await;
     let db_anki = AnkiDatabase::new(DB_URL2).await;
     db.migrate().await;
+    dbg!(db.ids().await);
 
     // let mut tx = db.0.begin().await.unwrap();
     // //TODO rayon?

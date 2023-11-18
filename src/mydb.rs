@@ -1,6 +1,12 @@
-use sqlx::{migrate::MigrateDatabase, Sqlite, SqlitePool};
+use sqlx::{migrate::MigrateDatabase, FromRow, Sqlite, SqlitePool};
 
 pub struct MyDatabase(pub SqlitePool);
+
+#[derive(Clone, FromRow, Debug)]
+pub struct MyDecks {
+    id: i64,
+    timestamp: i64,
+}
 
 impl MyDatabase {
     pub async fn new(url: &str) -> Self {
@@ -29,6 +35,15 @@ impl MyDatabase {
             .unwrap();
         }
         tx.commit().await.unwrap();
+    }
+
+    pub async fn ids(&self) -> Vec<MyDecks> {
+        sqlx::query_as::<_, MyDecks>(
+            "SELECT id, CAST(strftime(\"%s\", timestamp) as INTEGER) as timestamp from decks",
+        )
+        .fetch_all(&self.0)
+        .await
+        .unwrap()
     }
 
     pub async fn migrate(&self) {
