@@ -1,0 +1,36 @@
+use sqlx::{migrate::MigrateDatabase, Sqlite, SqlitePool};
+
+pub struct MyDatabase(pub SqlitePool);
+
+impl MyDatabase {
+    pub async fn new(url: &str) -> Self {
+        if !Sqlite::database_exists(url).await.unwrap_or(false) {
+            println!("Creating database {}", url);
+            match Sqlite::create_database(url).await {
+                Ok(_) => println!("Create db success"),
+                Err(error) => panic!("error: {}", error),
+            }
+        } else {
+            println!("Database already exists");
+        }
+        let db = SqlitePool::connect(url).await.unwrap();
+        Self(db)
+    }
+
+    pub async fn migrate(&self) {
+        let crate_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
+        let migrations = std::path::Path::new(&crate_dir).join("./migrations");
+        let migration_results = sqlx::migrate::Migrator::new(migrations)
+            .await
+            .unwrap()
+            .run(&self.0)
+            .await;
+        match migration_results {
+            Ok(_) => println!("Migration success"),
+            Err(error) => {
+                panic!("error: {}", error);
+            }
+        }
+        println!("migration: {:?}", migration_results);
+    }
+}
