@@ -1,5 +1,6 @@
 pub mod ankidb;
 pub mod bank_fields;
+pub mod morphdb;
 pub mod mydb;
 pub mod parser;
 
@@ -10,7 +11,7 @@ use chrono::DateTime;
 use clap::Parser;
 use mydb::MyDeck;
 
-use crate::{ankidb::AnkiDatabase, mydb::MyDatabase, parser::JParser};
+use crate::{ankidb::AnkiDatabase, morphdb::MorphDatabase, mydb::MyDatabase, parser::JParser};
 const DB_URL: &str = "sqlite://sqlite.db";
 
 #[derive(Debug)]
@@ -67,7 +68,6 @@ struct Cli {
 #[tokio::main]
 async fn main() {
     let cli = Cli::parse();
-    dbg!(&cli);
 
     let mut main_profile_url = dirs::data_dir().unwrap();
     main_profile_url.push("Anki2");
@@ -98,11 +98,16 @@ async fn main() {
 
     let db = MyDatabase::new(DB_URL).await;
     let db_anki = AnkiDatabase::new(sentence_bank_url.as_os_str().to_str().unwrap()).await;
+    let db_morphs = MorphDatabase::new(main_profile_url.as_os_str().to_str().unwrap()).await;
+
+    let known_morphs = db_morphs.list_morphs().await;
+
     db.migrate().await;
 
     let anki_decks = db_anki.list_decks().await;
     let my_decks = db.ids().await;
     let options = gen_deck_list(&anki_decks, &my_decks);
+    db.update_morphs(&known_morphs).await;
 
     let decks: Vec<i64> = inquire::MultiSelect::new("Select the decks to add:", options)
         .prompt()

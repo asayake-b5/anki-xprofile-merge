@@ -1,5 +1,7 @@
 use sqlx::{migrate::MigrateDatabase, FromRow, Sqlite, SqlitePool};
 
+use crate::morphdb::Morph;
+
 pub struct MyDatabase(pub SqlitePool);
 
 #[derive(Clone, FromRow, Debug)]
@@ -30,6 +32,22 @@ impl MyDatabase {
                 "INSERT INTO decks (id) VALUES (?) ON CONFLICT(id) DO UPDATE SET timestamp = CURRENT_TIMESTAMP"
             )
             .bind(id)
+            .execute(&mut tx)
+            .await
+            .unwrap();
+        }
+        tx.commit().await.unwrap();
+    }
+
+    pub async fn update_morphs(&self, known_morphs: &[Morph]) {
+        let mut tx = self.0.begin().await.unwrap();
+        for morph in known_morphs {
+            sqlx::query(
+                "INSERT INTO knownmorphs (lemma, inflection, highest_learning_interval) VALUES (?, ?, ?) ON CONFLICT(lemma, inflection) DO UPDATE SET highest_learning_interval=excluded.highest_learning_interval"
+            )
+            .bind(&morph.lemma)
+            .bind(&morph.inflection)
+            .bind(morph.highest_learning_interval)
             .execute(&mut tx)
             .await
             .unwrap();
