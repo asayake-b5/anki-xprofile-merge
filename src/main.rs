@@ -1,4 +1,5 @@
 pub mod ankidb;
+pub mod bank_fields;
 pub mod mydb;
 pub mod parser;
 
@@ -103,40 +104,37 @@ async fn main() {
     let my_decks = db.ids().await;
     let options = gen_deck_list(&anki_decks, &my_decks);
 
-    //TODO add deckid to mydb, then do some formatting if the deck was already added
-    // TODO create new struct, to put our timestamp in
-    // mydeck table: deckid, timestamp
-    inquire::MultiSelect::new("Select the decks to add:", options)
+    let decks: Vec<i64> = inquire::MultiSelect::new("Select the decks to add:", options)
         .prompt()
+        .unwrap()
+        .iter()
+        .map(|d| d.id)
+        .collect();
+
+    let notes = db_anki.list_notes(&decks).await;
+    // let bank_fields = bank_fields::extract_slice(&notes);
+    // dbg!(parser.parse(&bank_fields[0].sentence));
+
+    let mut tx = db.0.begin().await.unwrap();
+    //TODO rayon?
+    for note in notes {
+        let bank_fields = bank_fields::extract_note(&note);
+        let parsed = parser.parse(&bank_fields.sentence).unwrap_or_default();
+
+        let _ = sqlx::query(
+            "insert or ignore into notes (nid, audio, image, sentence, morphenes) values (?, ?, ?, ?, ?);",
+        )
+        .bind(note.id)
+        .bind(bank_fields.audio)
+        .bind(bank_fields.image)
+        .bind(bank_fields.sentence)
+        .bind(
+            parsed
+        )
+        // .bind(note.id)
+        .execute(&mut tx)
+        .await
         .unwrap();
-
-    // let mut tx = db.0.begin().await.unwrap();
-    // //TODO rayon?
-    // for note in notes_results {
-    //     let thing = note
-    //         .flds
-    //         .split(0x1f as char)
-    //         .map(|e| e.to_string())
-    //         .collect::<Vec<String>>();
-
-    //     let _ = sqlx::query(
-    //         "INSERT OR IGNORE INTO notes (nid, audio, image, sentence, morphenes) VALUES (?, ?, ?, ?, ?);",
-    //     )
-    //     .bind(note.id)
-    //     .bind(thing[0].clone())
-    //     .bind(thing[1].clone())
-    //     .bind(thing[2].clone())
-    //     .bind(
-    //         parser
-    //             .parse(&thing[2])
-    //             .unwrap_or_default()
-    //             .join(",")
-    //             .to_string(),
-    //     )
-    //     // .bind(note.id)
-    //     .execute(&mut tx)
-    //     .await
-    //     .unwrap();
-    // }
-    // tx.commit().await.unwrap();
+    }
+    tx.commit().await.unwrap();
 }

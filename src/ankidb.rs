@@ -11,8 +11,8 @@ pub struct AnkiDeck {
 
 #[derive(Clone, FromRow, Debug)]
 pub struct AnkiNote {
-    id: i64,
-    flds: String,
+    pub id: i64,
+    pub flds: String,
 }
 
 impl AnkiDatabase {
