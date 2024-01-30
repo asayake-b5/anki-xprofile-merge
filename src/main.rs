@@ -6,13 +6,11 @@ use std::fmt::Display;
 
 use ankidb::AnkiDeck;
 use chrono::DateTime;
+use clap::Parser;
 use mydb::MyDeck;
-use sqlx::prelude::FromRow;
 
-use crate::{ankidb::AnkiDatabase, mydb::MyDatabase, parser::Parser};
+use crate::{ankidb::AnkiDatabase, mydb::MyDatabase, parser::JParser};
 const DB_URL: &str = "sqlite://sqlite.db";
-//TODO [cfg(windows) linux etc, parameter/inquire about the profile]
-const DB_URL2: &str = "sqlite:///home/bv/.local/share/Anki2/SentenceBank/collection.anki2";
 
 #[derive(Debug)]
 pub struct DeckList {
@@ -54,14 +52,51 @@ pub fn gen_deck_list(anki: &[AnkiDeck], mine: &[MyDeck]) -> Vec<DeckList> {
     r
 }
 
+#[derive(Parser, Debug)]
+// #[command(author, version, about, long_about = None)]
+struct Cli {
+    /// The profile you normally use, with all your morphs calculated etc, where your mining deck is
+    main_profile_name: String,
+    /// Your sentence bank profile
+    sentence_bank_profile_name: String,
+}
+
 //TODO n+1ing sentences, aka pull all the known words
 
 #[tokio::main]
 async fn main() {
-    let mut parser = Parser::new();
+    let cli = Cli::parse();
+    dbg!(&cli);
+
+    let mut main_profile_url = dirs::data_dir().unwrap();
+    main_profile_url.push("Anki2");
+    main_profile_url.push(&cli.main_profile_name);
+    main_profile_url.push("ankimorphs.db");
+    if !main_profile_url.as_path().exists() {
+        eprintln!("Path {} does not exist, did you provide the right profile name, and are you using anki-morphs?", main_profile_url.display());
+        return;
+    }
+
+    let mut sentence_bank_url = dirs::data_dir().unwrap();
+    sentence_bank_url.push("Anki2");
+    sentence_bank_url.push(&cli.sentence_bank_profile_name);
+    sentence_bank_url.push("collection.anki2");
+    if !sentence_bank_url.as_path().exists() {
+        eprintln!(
+            "Path {} does not exist, did you provide the right profile name?",
+            sentence_bank_url.display()
+        );
+        return;
+    }
+
+    // dbg!(sentence_bank_url);
+
+    // dbg!(machine_kind);
+
+    let mut parser = JParser::new();
 
     let mut db = MyDatabase::new(DB_URL).await;
-    let db_anki = AnkiDatabase::new(DB_URL2).await;
+    let db_anki = AnkiDatabase::new(sentence_bank_url.as_os_str().to_str().unwrap()).await;
     db.migrate().await;
 
     let anki_decks = db_anki.list_decks().await;

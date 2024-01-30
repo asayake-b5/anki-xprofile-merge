@@ -1,6 +1,4 @@
-use std::fmt::Display;
-
-use sqlx::{migrate::MigrateDatabase, FromRow, Sqlite, SqlitePool};
+use sqlx::{FromRow, SqlitePool};
 
 pub struct AnkiDatabase(pub SqlitePool);
 

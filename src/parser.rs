@@ -1,11 +1,11 @@
 use notmecab::{Blob, Cache, Dict, LexerToken, TokenizeError};
 
-pub struct Parser {
+pub struct JParser {
     dict: Dict,
     cache: Cache,
 }
 
-impl Parser {
+impl JParser {
     pub fn new() -> Self {
         // you need to acquire a mecab dictionary and place these files here manually
         let sysdic = Blob::open("data/sys.dic").unwrap();
@@ -14,7 +14,7 @@ impl Parser {
         let unkdef = Blob::open("data/char.bin").unwrap();
 
         let dict = Dict::load(sysdic, unkdic, matrix, unkdef).unwrap();
-        Parser {
+        JParser {
             dict,
             cache: Cache::new(),
         }
