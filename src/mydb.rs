@@ -23,7 +23,7 @@ impl MyDatabase {
         Self(db)
     }
 
-    pub async fn add_ids(&mut self, deck_ids: &[i64]) {
+    pub async fn add_ids(&self, deck_ids: &[i64]) {
         let mut tx = self.0.begin().await.unwrap();
         for id in deck_ids {
             sqlx::query(

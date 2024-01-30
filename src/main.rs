@@ -96,7 +96,7 @@ async fn main() {
 
     let mut parser = JParser::new();
 
-    let mut db = MyDatabase::new(DB_URL).await;
+    let db = MyDatabase::new(DB_URL).await;
     let db_anki = AnkiDatabase::new(sentence_bank_url.as_os_str().to_str().unwrap()).await;
     db.migrate().await;
 
