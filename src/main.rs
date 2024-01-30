@@ -110,6 +110,7 @@ async fn main() {
         .iter()
         .map(|d| d.id)
         .collect();
+    db.add_ids(&decks).await;
 
     let notes = db_anki.list_notes(&decks).await;
     // let bank_fields = bank_fields::extract_slice(&notes);
