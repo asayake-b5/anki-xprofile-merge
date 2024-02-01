@@ -148,7 +148,7 @@ async fn main() {
     tx.commit().await.unwrap();
 
     let ankiconnect = AnkiConnect::new("localhost", 8765);
-    let models = inquire::Select::new("Select the model to act upon:", ankiconnect.list_models())
+    let model = inquire::Select::new("Select the model to act upon:", ankiconnect.list_models())
         .prompt()
         .unwrap();
 
@@ -161,5 +161,32 @@ async fn main() {
     .iter()
     .map(|d| d.id)
     .collect();
-    dbg!(decks);
+    // dbg!(decks);
+
+    let notes = ankiconnect.find_notes(&model, &decks);
+    let fields = ankiconnect.list_fields(&notes);
+    let word_reading = inquire::Select::new(
+        "Select the field where your target is, including its ruby (eg. 漢字[かんじ])",
+        fields.clone(),
+    )
+    .prompt()
+    .unwrap();
+
+    let sentence = inquire::Select::new(
+        "Select the field where your sentence field is, if you have the choice, pick the furiganaless one",
+        fields.clone(),
+    )
+    .prompt()
+    .unwrap();
+
+    let sentence_audio = inquire::Select::new(
+        "Select the field where your sentence audio is",
+        fields.clone(),
+    )
+    .prompt()
+    .unwrap();
+
+    dbg!(word_reading);
+    dbg!(sentence);
+    dbg!(sentence_audio);
 }
