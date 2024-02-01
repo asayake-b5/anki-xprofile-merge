@@ -148,45 +148,55 @@ async fn main() {
     tx.commit().await.unwrap();
 
     let ankiconnect = AnkiConnect::new("localhost", 8765);
-    let model = inquire::Select::new("Select the model to act upon:", ankiconnect.list_models())
-        .prompt()
-        .unwrap();
+    // let model = inquire::Select::new("Select the model to act upon:", ankiconnect.list_models())
+    //     .prompt()
+    //     .unwrap();
 
-    let decks: Vec<i64> = inquire::MultiSelect::new(
-        "Select the decks to consider (none for all):",
-        ankiconnect.list_decks(),
-    )
-    .prompt()
-    .unwrap()
-    .iter()
-    .map(|d| d.id)
-    .collect();
-    // dbg!(decks);
+    // let decks: Vec<i64> = inquire::MultiSelect::new(
+    //     "Select the decks to consider (none for all):",
+    //     ankiconnect.list_decks(),
+    // )
+    // .prompt()
+    // .unwrap()
+    // .iter()
+    // .map(|d| d.id)
+    // .collect();
+    // dbg!(&decks);
 
-    let notes = ankiconnect.find_notes(&model, &decks);
-    let fields = ankiconnect.list_fields(&notes);
-    let word_reading = inquire::Select::new(
-        "Select the field where your target is, including its ruby (eg. 漢字[かんじ])",
-        fields.clone(),
-    )
-    .prompt()
-    .unwrap();
+    // let notes = ankiconnect.find_notes(&model, &decks);
+    // let fields = ankiconnect.list_fields(&notes);
+    // let word_reading = inquire::Select::new(
+    //     "Select the field where your target is, including its ruby (eg. 漢字[かんじ])",
+    //     fields.clone(),
+    // )
+    // .prompt()
+    // .unwrap();
 
-    let sentence = inquire::Select::new(
-        "Select the field where your sentence field is, if you have the choice, pick the furiganaless one",
-        fields.clone(),
-    )
-    .prompt()
-    .unwrap();
+    // let sentence = inquire::Select::new(
+    //     "Select the field where your sentence field is, if you have the choice, pick the furiganaless one",
+    //     fields.clone(),
+    // )
+    // .prompt()
+    // .unwrap();
 
-    let sentence_audio = inquire::Select::new(
-        "Select the field where your sentence audio is",
-        fields.clone(),
-    )
-    .prompt()
-    .unwrap();
+    // let sentence_audio = inquire::Select::new(
+    //     "Select the field where your sentence audio is",
+    //     fields.clone(),
+    // )
+    // .prompt()
+    // .unwrap();
 
-    dbg!(word_reading);
-    dbg!(sentence);
-    dbg!(sentence_audio);
+    // dbg!(word_reading);
+    // dbg!(sentence);
+    // dbg!(sentence_audio);
+    let model = "JP Mining Note";
+    let decks: Vec<i64> = vec![1699524597138];
+    let word_reading = "WordReading";
+    let sentence = "Sentence";
+    let sentence_audio = "SentenceAudio";
+    let notes = ankiconnect.find_notes(model, &decks);
+    // dbg!(notes);
+    let notes = ankiconnect.notes_redux(&notes, word_reading, sentence, sentence_audio);
+    dbg!(notes);
+    ankiconnect.test_update_note_fields()
 }

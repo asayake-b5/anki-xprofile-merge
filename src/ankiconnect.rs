@@ -6,6 +6,13 @@ use ureq::Agent;
 use crate::DeckList;
 
 pub struct AnkiConnect(String, ureq::Agent);
+#[derive(Debug)]
+pub struct Note {
+    id: i64,
+    word_reading: String,
+    sentence: String,
+    sentence_audio: String,
+}
 
 impl AnkiConnect {
     pub fn new(hostname: &str, port: u32) -> Self {
@@ -81,5 +88,55 @@ impl AnkiConnect {
             .keys()
             .cloned()
             .collect_vec()
+    }
+
+    pub fn notes_redux(
+        &self,
+        notes: &[i64],
+        word_reading: &str,
+        sentence: &str,
+        sentence_audio: &str,
+    ) -> Vec<Note> {
+        let mut return_val = Vec::with_capacity(10000);
+        let response = self.1.post(&self.0).send_json(ureq::json!({
+          "action": "notesInfo",
+          "version": 6,
+          "params": {
+              "notes": notes
+        }}));
+        let r = response.unwrap().into_json::<serde_json::Value>().unwrap();
+        let r = r.get("result").unwrap();
+        for note in r.as_array().unwrap() {
+            return_val.push(Note {
+                id: note["noteId"].as_i64().unwrap(),
+                word_reading: note["fields"][word_reading]["value"]
+                    .as_str()
+                    .unwrap()
+                    .to_string(),
+                sentence: note["fields"][sentence]["value"]
+                    .as_str()
+                    .unwrap()
+                    .to_string(),
+                sentence_audio: note["fields"][sentence_audio]["value"]
+                    .as_str()
+                    .unwrap()
+                    .to_string(),
+            });
+        }
+        return_val
+    }
+
+    pub fn test_update_note_fields(&self) {
+        let response = self.1.post(&self.0).send_json(ureq::json!({
+          "action": "updateNoteFields",
+          "version": 6,
+          "params": {
+              "note": {
+                  "id": 1703533676062_i64,
+                  "fields": {
+                      "AltDisplayWord": "baba"
+                  }
+              }
+        }}));
     }
 }
