@@ -8,10 +8,10 @@ use crate::DeckList;
 pub struct AnkiConnect(String, ureq::Agent);
 #[derive(Debug)]
 pub struct Note {
-    id: i64,
-    word_reading: String,
-    sentence: String,
-    sentence_audio: String,
+    pub id: i64,
+    pub word_reading: String,
+    pub sentence: String,
+    pub sentence_audio: String,
 }
 
 impl AnkiConnect {

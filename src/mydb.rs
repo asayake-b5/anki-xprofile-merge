@@ -10,6 +10,15 @@ pub struct MyDeck {
     pub timestamp: i64,
 }
 
+#[derive(Clone, FromRow, Debug)]
+pub struct DBNote {
+    pub nid: i64,
+    pub sentence: String,
+    pub image: String,
+    pub audio: String,
+    pub morphenes: String,
+}
+
 impl MyDatabase {
     pub async fn new(url: &str) -> Self {
         if !Sqlite::database_exists(url).await.unwrap_or(false) {
@@ -62,6 +71,19 @@ impl MyDatabase {
         .fetch_all(&self.0)
         .await
         .unwrap()
+    }
+
+    pub async fn find_lucky(&self, tokenized: &str) -> Option<String> {
+        if let Ok(note) = sqlx::query_as::<_, DBNote>("SELECT *FROM notes WHERE notes.morphenes=?")
+            .bind(tokenized)
+            .fetch_one(&self.0)
+            .await
+        {
+            dbg!(note);
+            Some(String::from("aa"))
+        } else {
+            None
+        }
     }
 
     pub async fn migrate(&self) {

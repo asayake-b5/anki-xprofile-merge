@@ -14,7 +14,10 @@ use clap::Parser;
 use inquire::MultiSelect;
 use mydb::MyDeck;
 
-use crate::{ankidb::AnkiDatabase, morphdb::MorphDatabase, mydb::MyDatabase, parser::JParser};
+use crate::{
+    ankiconnect::Note, ankidb::AnkiDatabase, morphdb::MorphDatabase, mydb::MyDatabase,
+    parser::JParser,
+};
 const DB_URL: &str = "sqlite://sqlite.db";
 
 #[derive(Debug)]
@@ -197,6 +200,16 @@ async fn main() {
     let notes = ankiconnect.find_notes(model, &decks);
     // dbg!(notes);
     let notes = ankiconnect.notes_redux(&notes, word_reading, sentence, sentence_audio);
-    dbg!(notes);
-    ankiconnect.test_update_note_fields()
+    //TODO also filter sentenceless things, later down the pipeline?
+    let notes = notes
+        .into_iter()
+        .filter(|note| note.sentence_audio.is_empty() && !note.sentence.is_empty())
+        .collect::<Vec<Note>>();
+    for note in notes {
+        if let Ok(tokenized) = parser.parse(&note.sentence) {
+            // println!("{tokenized}",);
+            db.find_lucky(&tokenized).await;
+        }
+    }
+    // ankiconnect.test_update_note_fields()
 }
