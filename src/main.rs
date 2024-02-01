@@ -1,3 +1,4 @@
+pub mod ankiconnect;
 pub mod ankidb;
 pub mod bank_fields;
 pub mod morphdb;
@@ -6,9 +7,11 @@ pub mod parser;
 
 use std::fmt::Display;
 
+use ankiconnect::AnkiConnect;
 use ankidb::AnkiDeck;
 use chrono::DateTime;
 use clap::Parser;
+use inquire::MultiSelect;
 use mydb::MyDeck;
 
 use crate::{ankidb::AnkiDatabase, morphdb::MorphDatabase, mydb::MyDatabase, parser::JParser};
@@ -143,4 +146,20 @@ async fn main() {
         .unwrap();
     }
     tx.commit().await.unwrap();
+
+    let ankiconnect = AnkiConnect::new("localhost", 8765);
+    let models = inquire::Select::new("Select the model to act upon:", ankiconnect.list_models())
+        .prompt()
+        .unwrap();
+
+    let decks: Vec<i64> = inquire::MultiSelect::new(
+        "Select the decks to consider (none for all):",
+        ankiconnect.list_decks(),
+    )
+    .prompt()
+    .unwrap()
+    .iter()
+    .map(|d| d.id)
+    .collect();
+    dbg!(decks);
 }
