@@ -73,14 +73,14 @@ impl MyDatabase {
         .unwrap()
     }
 
-    pub async fn find_lucky(&self, tokenized: &str) -> Option<String> {
+    //TODO clean this up
+    pub async fn find_lucky(&self, tokenized: &str) -> Option<DBNote> {
         if let Ok(note) = sqlx::query_as::<_, DBNote>("SELECT * FROM notes WHERE notes.morphenes=?")
             .bind(tokenized)
             .fetch_one(&self.0)
             .await
         {
-            // dbg!(note);
-            Some(String::from("aa"))
+            Some(note)
         } else {
             None
         }

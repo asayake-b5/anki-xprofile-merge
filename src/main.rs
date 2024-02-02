@@ -7,7 +7,7 @@ pub mod parser;
 
 use std::fmt::Display;
 
-use anki_xprofile_merge::clean_sentence;
+use anki_xprofile_merge::{clean_sentence, Match};
 use ankiconnect::AnkiConnect;
 use ankidb::AnkiDeck;
 use chrono::DateTime;
@@ -17,7 +17,10 @@ use mydb::MyDeck;
 use scraper::Selector;
 
 use crate::{
-    ankiconnect::Note, ankidb::AnkiDatabase, morphdb::MorphDatabase, mydb::MyDatabase,
+    ankiconnect::Note,
+    ankidb::AnkiDatabase,
+    morphdb::MorphDatabase,
+    mydb::{DBNote, MyDatabase},
     parser::JParser,
 };
 const DB_URL: &str = "sqlite://sqlite.db";
@@ -210,6 +213,7 @@ async fn main() {
         .filter(|note| note.sentence_audio.is_empty() && !note.sentence.is_empty())
         .collect::<Vec<Note>>();
     let mut not_found = 0;
+    let mut lucky_finds: Vec<Match> = Vec::with_capacity(100);
     for note in notes {
         // println!("{}", note.sentence);
         // println!("{}", note.word);
@@ -217,8 +221,20 @@ async fn main() {
 
         if let Ok(tokenized) = parser.parse(&clean_sentence(&note.sentence)) {
             if let Some(lucky) = db.find_lucky(&tokenized).await {
+                lucky_finds.push(Match {
+                    id: lucky.nid,
+                    sentence: lucky.sentence,
+                    audio: lucky.audio,
+                    image: lucky.image,
+                    morphenes: lucky.morphenes,
+                    og_clean_sentence: clean_sentence(&note.sentence),
+                    og_sentence: note.sentence,
+                    og_morphnes: tokenized,
+                    og_word: note.word,
+                });
                 continue;
             }
+            continue;
             // println!("a",);
             // let mut tokens = tokenized.split('\u{1f}');
             // let token = tokens.find(|e| e.contains(&note.word));
@@ -254,6 +270,21 @@ async fn main() {
         }
     }
     println!("{not_found}",);
+    // println!("{lucky_finds:#?}",);
+    if !lucky_finds.is_empty() {
+        let decks: Vec<(String, String)> = inquire::MultiSelect::new(
+            "Near-perfect matches found, which ones should we update?",
+            lucky_finds,
+        )
+        .prompt()
+        .unwrap()
+        .into_iter()
+        .map(|d| (d.audio, d.image))
+        .collect();
+        dbg!(&decks);
+        dbg!(decks.len());
+    }
+
     // let tokenized_word = String::from("撤廃\u{1e}てっぱい");
     // // let tokenized_word = String::from("\u{1e}");
     // let matches = db.find_like_morphene(&tokenized_word).await;
