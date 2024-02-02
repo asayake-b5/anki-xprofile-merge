@@ -168,8 +168,8 @@ async fn main() {
 
     // let notes = ankiconnect.find_notes(&model, &decks);
     // let fields = ankiconnect.list_fields(&notes);
-    // let word_reading = inquire::Select::new(
-    //     "Select the field where your target is, including its ruby (eg. 漢字[かんじ])",
+    // let word = inquire::Select::new(
+    //     "Select the field where your target is, ideally without furigana",
     //     fields.clone(),
     // )
     // .prompt()
@@ -194,12 +194,14 @@ async fn main() {
     // dbg!(sentence_audio);
     let model = "JP Mining Note";
     let decks: Vec<i64> = vec![1699524597138];
-    let word_reading = "WordReading";
+    //TODO change to word in the selector?
+    let word = "Word";
+    //TODO change to sentencereading, and use our own parsing?
     let sentence = "Sentence";
     let sentence_audio = "SentenceAudio";
     let notes = ankiconnect.find_notes(model, &decks);
     // dbg!(notes);
-    let notes = ankiconnect.notes_redux(&notes, word_reading, sentence, sentence_audio);
+    let notes = ankiconnect.notes_redux(&notes, word, sentence, sentence_audio);
     //TODO also filter sentenceless things, later down the pipeline?
     let notes = notes
         .into_iter()

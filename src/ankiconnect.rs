@@ -9,7 +9,7 @@ pub struct AnkiConnect(String, ureq::Agent);
 #[derive(Debug)]
 pub struct Note {
     pub id: i64,
-    pub word_reading: String,
+    pub word: String,
     pub sentence: String,
     pub sentence_audio: String,
 }
@@ -109,7 +109,7 @@ impl AnkiConnect {
         for note in r.as_array().unwrap() {
             return_val.push(Note {
                 id: note["noteId"].as_i64().unwrap(),
-                word_reading: note["fields"][word_reading]["value"]
+                word: note["fields"][word_reading]["value"]
                     .as_str()
                     .unwrap()
                     .to_string(),

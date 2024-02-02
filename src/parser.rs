@@ -45,3 +45,9 @@ impl JParser {
         Ok(result.join("\u{1f}"))
     }
 }
+
+impl Default for JParser {
+    fn default() -> Self {
+        Self::new()
+    }
+}
