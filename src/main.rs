@@ -144,7 +144,7 @@ async fn main() {
             parsed
         )
         // .bind(note.id)
-        .execute(&mut tx)
+        .execute(&mut *tx)
         .await
         .unwrap();
     }

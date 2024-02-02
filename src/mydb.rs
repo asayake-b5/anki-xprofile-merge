@@ -41,7 +41,7 @@ impl MyDatabase {
                 "INSERT INTO decks (id) VALUES (?) ON CONFLICT(id) DO UPDATE SET timestamp = CURRENT_TIMESTAMP"
             )
             .bind(id)
-            .execute(&mut tx)
+            .execute(&mut *tx)
             .await
             .unwrap();
         }
@@ -57,7 +57,7 @@ impl MyDatabase {
             .bind(&morph.lemma)
             .bind(&morph.inflection)
             .bind(morph.highest_learning_interval)
-            .execute(&mut tx)
+            .execute(&mut *tx)
             .await
             .unwrap();
         }
