@@ -209,11 +209,55 @@ async fn main() {
         .into_iter()
         .filter(|note| note.sentence_audio.is_empty() && !note.sentence.is_empty())
         .collect::<Vec<Note>>();
+    let mut not_found = 0;
     for note in notes {
-        if let Ok(tokenized) = parser.parse(&note.sentence) {
+        // println!("{}", note.sentence);
+        // println!("{}", note.word);
+        //TODO turn word_reading into 1f1e
+
+        if let Ok(tokenized) = parser.parse(&clean_sentence(&note.sentence)) {
+            if let Some(lucky) = db.find_lucky(&tokenized).await {
+                continue;
+            }
+            // println!("a",);
+            // let mut tokens = tokenized.split('\u{1f}');
+            // let token = tokens.find(|e| e.contains(&note.word));
+            let tokenized_word = parser.parse(&note.word).unwrap();
+            let token = tokenized.contains(&tokenized_word);
+            if !token {
+                let p = parser.parse(&clean_sentence(&note.sentence));
+                let p2 = parser.parse(&note.word);
+                // println!("--",);
+                // println!("{}", note.sentence);
+                // println!("{:#?}", p);
+                // println!("{:#?}", p2);
+                // println!("--",);
+                //TODO figure out what to do with these later
+            } else {
+                // println!("{:#?}", &parser.parse(&note.word));
+                // TODO transaction this and find matches for all instead?
+                let matches = db.find_like_morphene(&tokenized_word).await;
+                if !matches.is_empty() {
+                    // println!("Found {1} for {0}", tokenized_word, matches.len());
+                    // println!("{:#?}", matches);
+                } else {
+                    println!("notFound {1} for {0}", tokenized_word, matches.len());
+                    not_found += 1
+                }
+            }
+            // println!("{token:#?}",);
             // println!("{tokenized}",);
-            db.find_lucky(&tokenized).await;
+            // for token in tokenized.split('\u{1f}') {
+            //     println!("{token}",);
+            // }
+            //TODO handle find lucky even if rare
         }
     }
+    println!("{not_found}",);
+    // let tokenized_word = String::from("撤廃\u{1e}てっぱい");
+    // // let tokenized_word = String::from("\u{1e}");
+    // let matches = db.find_like_morphene(&tokenized_word).await;
+    // println!("{:#?}", &matches);
+
     // ankiconnect.test_update_note_fields()
 }

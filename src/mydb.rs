@@ -74,16 +74,25 @@ impl MyDatabase {
     }
 
     pub async fn find_lucky(&self, tokenized: &str) -> Option<String> {
-        if let Ok(note) = sqlx::query_as::<_, DBNote>("SELECT *FROM notes WHERE notes.morphenes=?")
+        if let Ok(note) = sqlx::query_as::<_, DBNote>("SELECT * FROM notes WHERE notes.morphenes=?")
             .bind(tokenized)
             .fetch_one(&self.0)
             .await
         {
-            dbg!(note);
+            // dbg!(note);
             Some(String::from("aa"))
         } else {
             None
         }
+    }
+
+    pub async fn find_like_morphene(&self, morphene: &str) -> Vec<DBNote> {
+        sqlx::query_as::<_, DBNote>(&format!(
+            "SELECT * FROM notes WHERE morphenes LIKE \"%{morphene}%\""
+        ))
+        .fetch_all(&self.0)
+        .await
+        .unwrap()
     }
 
     pub async fn migrate(&self) {
