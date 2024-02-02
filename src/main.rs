@@ -4,6 +4,7 @@ pub mod bank_fields;
 pub mod morphdb;
 pub mod mydb;
 pub mod parser;
+pub mod path_converter;
 
 use std::fmt::Display;
 
@@ -22,6 +23,7 @@ use crate::{
     morphdb::MorphDatabase,
     mydb::{DBNote, MyDatabase},
     parser::JParser,
+    path_converter::PathConverter,
 };
 const DB_URL: &str = "sqlite://sqlite.db";
 
@@ -100,6 +102,9 @@ async fn main() {
         );
         return;
     }
+
+    let path_converter =
+        PathConverter::new(&cli.sentence_bank_profile_name, &cli.main_profile_name);
 
     // dbg!(sentence_bank_url);
 
@@ -222,7 +227,7 @@ async fn main() {
         if let Ok(tokenized) = parser.parse(&clean_sentence(&note.sentence)) {
             if let Some(lucky) = db.find_lucky(&tokenized).await {
                 lucky_finds.push(Match {
-                    id: lucky.nid,
+                    id: note.id,
                     sentence: lucky.sentence,
                     audio: lucky.audio,
                     image: lucky.image,
@@ -272,17 +277,27 @@ async fn main() {
     println!("{not_found}",);
     // println!("{lucky_finds:#?}",);
     if !lucky_finds.is_empty() {
-        let decks: Vec<(String, String)> = inquire::MultiSelect::new(
+        let notes: Vec<(i64, String, String)> = inquire::MultiSelect::new(
             "Near-perfect matches found, which ones should we update?",
             lucky_finds,
         )
         .prompt()
         .unwrap()
         .into_iter()
-        .map(|d| (d.audio, d.image))
+        .map(|n| (n.id, n.audio, n.image))
         .collect();
-        dbg!(&decks);
-        dbg!(decks.len());
+        for deck in notes {
+            let abs_path = path_converter.sound_to_path(&deck.1).unwrap();
+            // ankiconnect.store_media_file(&abs_path);
+            dbg!(&deck);
+            ankiconnect.update_note_fields(deck.0, &deck.1, &sentence_audio, &abs_path);
+            // println!(
+            //     "{}",
+            //
+            // );
+        }
+        // dbg!(&decks);
+        // dbg!(decks.len());
     }
 
     // let tokenized_word = String::from("撤廃\u{1e}てっぱい");

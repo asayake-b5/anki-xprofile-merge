@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use std::time::Duration;
+use std::{path::Path, time::Duration};
 
 use ureq::Agent;
 
@@ -126,17 +126,41 @@ impl AnkiConnect {
         return_val
     }
 
-    pub fn test_update_note_fields(&self) {
+    //TODO handle optional audio/sentence/etc
+    pub fn update_note_fields(
+        &self,
+        id: i64,
+        sound_content: &str,
+        sound_field: &str,
+        sound_abs_path: &Path,
+    ) {
         let response = self.1.post(&self.0).send_json(ureq::json!({
           "action": "updateNoteFields",
           "version": 6,
           "params": {
               "note": {
-                  "id": 1703533676062_i64,
+                  "id": id,
                   "fields": {
-                      "AltDisplayWord": "baba"
-                  }
-              }
+                  },
+                  "audio": [{
+                    "path": sound_abs_path,
+                    "filename": sound_abs_path.file_name().unwrap().to_str(),
+                    "fields": [sound_field]
+                  }]
+              },
         }}));
+        dbg!(response.unwrap().into_json::<serde_json::Value>().unwrap());
+    }
+
+    pub fn store_media_file(&self, path: &Path) {
+        let response = self.1.post(&self.0).send_json(ureq::json!({
+            "action": "storeMediaFile",
+            "version": 6,
+            "params": {
+                "filename": path.file_name().unwrap().to_str(),
+                "path": path
+            }
+        }));
+        dbg!(response.unwrap());
     }
 }
