@@ -7,12 +7,14 @@ pub mod parser;
 
 use std::fmt::Display;
 
+use anki_xprofile_merge::clean_sentence;
 use ankiconnect::AnkiConnect;
 use ankidb::AnkiDeck;
 use chrono::DateTime;
 use clap::Parser;
 use inquire::MultiSelect;
 use mydb::MyDeck;
+use scraper::Selector;
 
 use crate::{
     ankiconnect::Note, ankidb::AnkiDatabase, morphdb::MorphDatabase, mydb::MyDatabase,
